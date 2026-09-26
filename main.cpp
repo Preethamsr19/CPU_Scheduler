@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <queue>
 #include <string>
+#include <iomanip>
 using namespace std;
 
 struct Process {
@@ -22,6 +23,13 @@ struct Slice {
     int id;
     int start;
     int end;
+};
+
+struct Result {
+    string name;
+    double avgWaiting;
+    double avgTurnaround;
+    double avgResponse;
 };
 
 void printGantt(const vector<Slice> &timeline) {
@@ -53,31 +61,55 @@ void printGantt(const vector<Slice> &timeline) {
     }
 }
 
-void fcfs(vector<Process> processes) {
-    sort(processes.begin(), processes.end(), [](Process a, Process b) {
-        return a.arrivalTime < b.arrivalTime;
-    });
+Result fcfs(vector<Process> processes) {
+    sort(processes.begin(), processes.end(),
+         [](Process a, Process b) {
+             return a.arrivalTime < b.arrivalTime;
+         });
 
     int currentTime = 0;
     vector<Slice> timeline;
 
+    double totalWaiting = 0;
+    double totalTurnaround = 0;
+    double totalResponse = 0;
+
     for (Process &p : processes) {
 
         if (currentTime < p.arrivalTime) {
-            timeline.push_back({-1, currentTime, p.arrivalTime});
+            timeline.push_back({
+                -1,
+                currentTime,
+                p.arrivalTime
+            });
+
             currentTime = p.arrivalTime;
         }
 
-        p.responseTime = currentTime - p.arrivalTime;
+        p.responseTime =
+            currentTime - p.arrivalTime;
 
         int startTime = currentTime;
+
         currentTime += p.burstTime;
 
-        timeline.push_back({p.id, startTime, currentTime});
+        timeline.push_back({
+            p.id,
+            startTime,
+            currentTime
+        });
 
         p.completionTime = currentTime;
-        p.turnaroundTime = p.completionTime - p.arrivalTime;
-        p.waitingTime = p.turnaroundTime - p.burstTime;
+
+        p.turnaroundTime =
+            p.completionTime - p.arrivalTime;
+
+        p.waitingTime =
+            p.turnaroundTime - p.burstTime;
+
+        totalWaiting += p.waitingTime;
+        totalTurnaround += p.turnaroundTime;
+        totalResponse += p.responseTime;
     }
 
     cout << "--- FCFS ---" << endl;
@@ -96,14 +128,27 @@ void fcfs(vector<Process> processes) {
     cout << endl;
     printGantt(timeline);
     cout << endl;
+
+    int n = processes.size();
+
+    return {
+        "FCFS",
+        totalWaiting / n,
+        totalTurnaround / n,
+        totalResponse / n
+    };
 }
 
-void sjf(vector<Process> processes) {
+Result sjf(vector<Process> processes) {
     int currentTime = 0;
     int completed = 0;
     int n = processes.size();
 
     vector<Slice> timeline;
+
+    double totalWaiting = 0;
+    double totalTurnaround = 0;
+    double totalResponse = 0;
 
     while (completed < n) {
 
@@ -124,7 +169,9 @@ void sjf(vector<Process> processes) {
             int idleStart = currentTime;
             currentTime++;
 
-            if (!timeline.empty() && timeline.back().id == -1) {
+            if (!timeline.empty() &&
+                timeline.back().id == -1) {
+
                 timeline.back().end = currentTime;
             } else {
                 timeline.push_back({
@@ -138,9 +185,11 @@ void sjf(vector<Process> processes) {
         }
 
         processes[idx].responseTime =
-            currentTime - processes[idx].arrivalTime;
+            currentTime -
+            processes[idx].arrivalTime;
 
         int startTime = currentTime;
+
         currentTime += processes[idx].burstTime;
 
         timeline.push_back({
@@ -149,7 +198,8 @@ void sjf(vector<Process> processes) {
             currentTime
         });
 
-        processes[idx].completionTime = currentTime;
+        processes[idx].completionTime =
+            currentTime;
 
         processes[idx].turnaroundTime =
             processes[idx].completionTime -
@@ -158,6 +208,10 @@ void sjf(vector<Process> processes) {
         processes[idx].waitingTime =
             processes[idx].turnaroundTime -
             processes[idx].burstTime;
+
+        totalWaiting += processes[idx].waitingTime;
+        totalTurnaround += processes[idx].turnaroundTime;
+        totalResponse += processes[idx].responseTime;
 
         processes[idx].isCompleted = true;
         completed++;
@@ -179,14 +233,25 @@ void sjf(vector<Process> processes) {
     cout << endl;
     printGantt(timeline);
     cout << endl;
+
+    return {
+        "SJF",
+        totalWaiting / n,
+        totalTurnaround / n,
+        totalResponse / n
+    };
 }
 
-void priorityScheduling(vector<Process> processes) {
+Result priorityScheduling(vector<Process> processes) {
     int currentTime = 0;
     int completed = 0;
     int n = processes.size();
 
     vector<Slice> timeline;
+
+    double totalWaiting = 0;
+    double totalTurnaround = 0;
+    double totalResponse = 0;
 
     while (completed < n) {
 
@@ -207,7 +272,9 @@ void priorityScheduling(vector<Process> processes) {
             int idleStart = currentTime;
             currentTime++;
 
-            if (!timeline.empty() && timeline.back().id == -1) {
+            if (!timeline.empty() &&
+                timeline.back().id == -1) {
+
                 timeline.back().end = currentTime;
             } else {
                 timeline.push_back({
@@ -221,9 +288,11 @@ void priorityScheduling(vector<Process> processes) {
         }
 
         processes[idx].responseTime =
-            currentTime - processes[idx].arrivalTime;
+            currentTime -
+            processes[idx].arrivalTime;
 
         int startTime = currentTime;
+
         currentTime += processes[idx].burstTime;
 
         timeline.push_back({
@@ -232,7 +301,8 @@ void priorityScheduling(vector<Process> processes) {
             currentTime
         });
 
-        processes[idx].completionTime = currentTime;
+        processes[idx].completionTime =
+            currentTime;
 
         processes[idx].turnaroundTime =
             processes[idx].completionTime -
@@ -241,6 +311,10 @@ void priorityScheduling(vector<Process> processes) {
         processes[idx].waitingTime =
             processes[idx].turnaroundTime -
             processes[idx].burstTime;
+
+        totalWaiting += processes[idx].waitingTime;
+        totalTurnaround += processes[idx].turnaroundTime;
+        totalResponse += processes[idx].responseTime;
 
         processes[idx].isCompleted = true;
         completed++;
@@ -262,9 +336,16 @@ void priorityScheduling(vector<Process> processes) {
     cout << endl;
     printGantt(timeline);
     cout << endl;
+
+    return {
+        "Priority",
+        totalWaiting / n,
+        totalTurnaround / n,
+        totalResponse / n
+    };
 }
 
-void roundRobin(vector<Process> processes, int quantum) {
+Result roundRobin(vector<Process> processes, int quantum) {
     int currentTime = 0;
     int completed = 0;
     int n = processes.size();
@@ -273,7 +354,11 @@ void roundRobin(vector<Process> processes, int quantum) {
     vector<bool> inQueue(n, false);
     vector<Slice> timeline;
 
-    // Initialize remaining burst time
+    double totalWaiting = 0;
+    double totalTurnaround = 0;
+    double totalResponse = 0;
+
+    // Initialize remaining time
     for (Process &p : processes) {
         p.remainingTime = p.burstTime;
     }
@@ -303,8 +388,9 @@ void roundRobin(vector<Process> processes, int quantum) {
                 }
             }
 
-            // Merge consecutive idle periods
-            if (!timeline.empty() && timeline.back().id == -1) {
+            if (!timeline.empty() &&
+                timeline.back().id == -1) {
+
                 timeline.back().end = currentTime;
             } else {
                 timeline.push_back({
@@ -321,29 +407,31 @@ void roundRobin(vector<Process> processes, int quantum) {
         q.pop();
         inQueue[idx] = false;
 
-        // Response time is recorded only on first execution
+        // First time process gets CPU
         if (processes[idx].responseTime == -1) {
             processes[idx].responseTime =
-                currentTime - processes[idx].arrivalTime;
+                currentTime -
+                processes[idx].arrivalTime;
         }
 
         int startTime = currentTime;
 
-        // Run for one quantum or until completion
         int runTime =
-            min(quantum, processes[idx].remainingTime);
+            min(quantum,
+                processes[idx].remainingTime);
 
         currentTime += runTime;
+
         processes[idx].remainingTime -= runTime;
 
-        // Record every quantum as a separate Gantt slice
+        // Every quantum gets its own slice
         timeline.push_back({
             processes[idx].id,
             startTime,
             currentTime
         });
 
-        // Add processes that arrived during this slice
+        // Add newly arrived processes
         for (int i = 0; i < n; i++) {
             if (processes[i].arrivalTime <= currentTime &&
                 processes[i].remainingTime > 0 &&
@@ -355,10 +443,11 @@ void roundRobin(vector<Process> processes, int quantum) {
             }
         }
 
-        // Process has finished
+        // Process finished
         if (processes[idx].remainingTime == 0) {
 
-            processes[idx].completionTime = currentTime;
+            processes[idx].completionTime =
+                currentTime;
 
             processes[idx].turnaroundTime =
                 processes[idx].completionTime -
@@ -368,12 +457,16 @@ void roundRobin(vector<Process> processes, int quantum) {
                 processes[idx].turnaroundTime -
                 processes[idx].burstTime;
 
+            totalWaiting += processes[idx].waitingTime;
+            totalTurnaround += processes[idx].turnaroundTime;
+            totalResponse += processes[idx].responseTime;
+
             processes[idx].isCompleted = true;
 
             completed++;
         }
 
-        // Process still has remaining work
+        // Process still has work
         else {
             q.push(idx);
             inQueue[idx] = true;
@@ -396,6 +489,42 @@ void roundRobin(vector<Process> processes, int quantum) {
     cout << endl;
     printGantt(timeline);
     cout << endl;
+
+    return {
+        "Round Robin",
+        totalWaiting / n,
+        totalTurnaround / n,
+        totalResponse / n
+    };
+}
+
+void printComparison(const vector<Result> &results) {
+    cout << "==============================================" << endl;
+    cout << "         SCHEDULING COMPARISON" << endl;
+    cout << "==============================================" << endl;
+
+    cout << left
+         << setw(15) << "Algorithm"
+         << setw(18) << "Avg Waiting"
+         << setw(20) << "Avg Turnaround"
+         << setw(15) << "Avg Response"
+         << endl;
+
+    cout << "--------------------------------------------------------------"
+         << endl;
+
+    cout << fixed << setprecision(2);
+
+    for (const Result &r : results) {
+        cout << left
+             << setw(15) << r.name
+             << setw(18) << r.avgWaiting
+             << setw(20) << r.avgTurnaround
+             << setw(15) << r.avgResponse
+             << endl;
+    }
+
+    cout << endl;
 }
 
 int main() {
@@ -406,13 +535,26 @@ int main() {
         {4, 3, 6, 2}
     };
 
-    fcfs(processes);
+    Result fcfsResult =
+        fcfs(processes);
 
-    sjf(processes);
+    Result sjfResult =
+        sjf(processes);
 
-    priorityScheduling(processes);
+    Result priorityResult =
+        priorityScheduling(processes);
 
-    roundRobin(processes, 2);
+    Result rrResult =
+        roundRobin(processes, 2);
+
+    vector<Result> results = {
+        fcfsResult,
+        sjfResult,
+        priorityResult,
+        rrResult
+    };
+
+    printComparison(results);
 
     return 0;
 }
