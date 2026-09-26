@@ -12,6 +12,7 @@ struct Process {
     int turnaroundTime = 0;
     int waitingTime = 0;
     int responseTime = -1;
+    bool isCompleted = false;
 };
 
 void fcfs(vector<Process> processes) {
@@ -35,6 +36,56 @@ void fcfs(vector<Process> processes) {
 
     cout << "--- FCFS ---" << endl;
     cout << "PID  AT  BT  CT  TAT  WT  RT" << endl;
+
+    for (const Process &p : processes) {
+        cout << " " << p.id << "   " << p.arrivalTime << "   " << p.burstTime
+             << "   " << p.completionTime << "   " << p.turnaroundTime
+             << "    " << p.waitingTime << "   " << p.responseTime << endl;
+    }
+}
+
+void sjf(vector<Process> processes) {
+    int currentTime = 0;
+    int completed = 0;
+    int n = processes.size();
+
+    while (completed < n) {
+        int idx = -1;
+        int minBurst = 1e9;
+
+        // Find the arrived process with the shortest burst time
+        for (int i = 0; i < n; i++) {
+            if (processes[i].arrivalTime <= currentTime &&
+                !processes[i].isCompleted &&
+                processes[i].burstTime < minBurst) {
+                
+                idx = i;
+                minBurst = processes[i].burstTime;
+            }
+        }
+
+        // No process is currently available
+        if (idx == -1) {
+            currentTime++;
+            continue;
+        }
+
+        // Run the selected process
+        processes[idx].responseTime = currentTime - processes[idx].arrivalTime;
+        currentTime += processes[idx].burstTime;
+        processes[idx].completionTime = currentTime;
+        processes[idx].turnaroundTime =
+            processes[idx].completionTime - processes[idx].arrivalTime;
+        processes[idx].waitingTime =
+            processes[idx].turnaroundTime - processes[idx].burstTime;
+
+        processes[idx].isCompleted = true;
+        completed++;
+    }
+
+    cout << "--- SJF ---" << endl;
+    cout << "PID  AT  BT  CT  TAT  WT  RT" << endl;
+
     for (const Process &p : processes) {
         cout << " " << p.id << "   " << p.arrivalTime << "   " << p.burstTime
              << "   " << p.completionTime << "   " << p.turnaroundTime
@@ -51,5 +102,7 @@ int main() {
     };
 
     fcfs(processes);
+    sjf(processes);
+
     return 0;
 }
